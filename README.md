@@ -130,6 +130,8 @@ Assuming all audio files have already been converted to the same sampling rate, 
 
 The following script will generate train.pt, val.pt and test.pt
 
+# python -m transkun.createDatasetMaestro "../OMAPS2" "../OMAPS2/OMAPS2.csv" "../OMAPS2/metadata"
+
 ```bash
 python3 -m transkun.createDatasetMaestro -h
 usage: createDatasetMaestro.py [-h] [--noPedalExtension] datasetPath metadataCSVPath outputPath
@@ -162,6 +164,8 @@ Then we call the training script.
 ```bash
 python3 -m transkun.train -h
 ```
+
+# python -m transkun.train --nProcess 1 --datasetPath "../OMAPS2" --datasetMetaFile_train "../OMAPS2/metadata/train.pickle" --datasetMetaFile_val "../OMAPS2/metadata/val.pickle" --batchSize 32 --max_lr 0.001 --nIter 100 --modelConf "checkpoint/conf.json" --augment "../OMAPS/weights.pth" --noPedalExtension
 
 ## The Evaluation Module
 

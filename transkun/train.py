@@ -14,8 +14,10 @@ import torch.multiprocessing as mp
 from .TrainUtil import *
 import argparse
 
+sys.path.append('D:\\Dissertation Code\\Skipping-The-Frame-Level\\transkun')
 
-def train(workerId, nWorker, filename, runSeed, args):
+
+def train(workerId, nWorker, filename, runSeed=12345): #args
     parallel = True
     if nWorker == 1:
         parallel = False
@@ -25,8 +27,9 @@ def train(workerId, nWorker, filename, runSeed, args):
         os.environ['MASTER_PORT'] = args.master_port
         dist.init_process_group('nccl', rank=workerId, world_size=nWorker)
 
-    device = torch.device("cuda:"+str(workerId%torch.cuda.device_count()) if torch.cuda.is_available() else "cpu")
-    torch.cuda.set_device(device)
+    device = torch.device("cpu")
+    # device = torch.device("cuda:"+str(workerId%torch.cuda.device_count()) if torch.cuda.is_available() else "cpu")
+    #torch.cuda.set_device(device)
     # torch.autograd.set_detect_anomaly(True)
     np.random.seed(workerId + int(time.time()))
     torch.manual_seed(workerId+int(time.time()))
@@ -87,6 +90,8 @@ def train(workerId, nWorker, filename, runSeed, args):
     globalStep = startIter
     # create dataloader
 
+    # MISSING CODE FROM GITHUB MUST CREATE
+
 
     # this iterator should be constructed each time
     batchSize = args.batchSize
@@ -131,27 +136,46 @@ def train(workerId, nWorker, filename, runSeed, args):
             model.train()
             optimizer.zero_grad()
 
-            totalBatch= torch.zeros(1).cuda()
-            totalLoss = torch.zeros(1).cuda()
-            totalLen = torch.zeros(1).cuda()
+            # totalBatch= torch.zeros(1).cuda()
+            # totalLoss = torch.zeros(1).cuda()
+            # totalLen = torch.zeros(1).cuda()
 
 
-            totalGT= torch.zeros(1).cuda()
-            totalEst = torch.zeros(1).cuda()
-            totalCorrect = torch.zeros(1).cuda()
+            # totalGT= torch.zeros(1).cuda()
+            # totalEst = torch.zeros(1).cuda()
+            # totalCorrect = torch.zeros(1).cuda()
 
-            totalGTFramewise = torch.zeros(1).cuda()
-            totalEstFramewise = torch.zeros(1).cuda()
-            totalCorrectFramewise = torch.zeros(1).cuda()
+            # totalGTFramewise = torch.zeros(1).cuda()
+            # totalEstFramewise = torch.zeros(1).cuda()
+            # totalCorrectFramewise = torch.zeros(1).cuda()
 
-            totalSEVelocity = torch.zeros(1).cuda()
-            totalSEOF= torch.zeros(1).cuda()
+            # totalSEVelocity = torch.zeros(1).cuda()
+            # totalSEOF= torch.zeros(1).cuda()
+
+            totalBatch = torch.zeros(1).to(device)
+            totalLoss = torch.zeros(1).to(device)
+            totalLen = torch.zeros(1).to(device)
+
+            totalGT = torch.zeros(1).to(device)
+            totalEst = torch.zeros(1).to(device)
+            totalCorrect = torch.zeros(1).to(device)
+
+            totalGTFramewise = torch.zeros(1).to(device)
+            totalEstFramewise = torch.zeros(1).to(device)
+            totalCorrectFramewise = torch.zeros(1).to(device)
+
+            totalSEVelocity = torch.zeros(1).to(device)
+            totalSEOF = torch.zeros(1).to(device)            
 
 
-
-            notesBatch = [sample["notes"] for sample in batch]
+            # We have mono wav files but are treating them as stereo
+            notesBatch = [sample["notes"] for sample in batch] 
+            # audioSlices = torch.stack(
+            #         [torch.from_numpy(sample["audioSlice"]) for sample in batch], dim = 0).to(device)
             audioSlices = torch.stack(
-                    [torch.from_numpy(sample["audioSlice"]) for sample in batch], dim = 0) . to(device)
+                [torch.from_numpy(sample["audioSlice"]).unsqueeze(-1) if sample["audioSlice"].ndim == 1 else torch.from_numpy(sample["audioSlice"])
+                for sample in batch], dim=0).to(device)
+            # audioSlices = torch.stack([torch.from_numpy(np.array(sample["audioSlice"][0])) for sample in batch], dim=0).to(device)
             audioLength = audioSlices.shape[1]/model.conf.fs
 
             logp = model.log_prob(audioSlices, notesBatch)
@@ -359,8 +383,8 @@ if __name__ == '__main__':
 
 
 
-    if num_processes == 1:
-        train(0, 1, saved_filename)
-    else:
-        mp.spawn(fn=train, args=(num_processes, saved_filename, int(time.time()), args),  nprocs = num_processes, join=True, daemon=False)
+    # if num_processes == 1:
+    #     train(0, 1, saved_filename)
+    # else:
+    #     mp.spawn(fn=train, args=(num_processes, saved_filename, int(time.time()), args),  nprocs = num_processes, join=True, daemon=False)
 

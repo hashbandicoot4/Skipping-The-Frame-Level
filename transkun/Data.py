@@ -197,18 +197,25 @@ def validateNotes(notes):
 def createIndexEvents(eventList):
     from ncls import FNCLS
     # internally uses ncls package
-    starts = np.array([_.start for _ in eventList])
-    ends = np.array([_.end for _ in eventList])
+    # starts = np.array([_.start for _ in eventList])
+    # ends = np.array([_.end for _ in eventList])
 
-    index = FNCLS(starts, ends, np.arange(len(eventList)))
+    # index = FNCLS(starts, ends, np.arange(len(eventList)))
 
+    # return index
+    starts = np.array([event.start for event in eventList], dtype=np.double)
+    ends = np.array([event.end for event in eventList], dtype=np.double)
+    ids = np.arange(len(eventList), dtype=np.int64)
+
+    index = FNCLS(starts, ends, ids)
     return index
 
 
 def querySingleInterval(start, end, index):
     starts = np.array([start], dtype = np.double)
     ends = np.array([end], dtype = np.double)
-    queryIds = np.array([0])
+    # queryIds = np.array([0])
+    queryIds = np.array([0], dtype=np.int64)
     r_id, r_loc = index.all_overlaps_both(starts, ends, queryIds)
 
     return r_loc
@@ -225,7 +232,7 @@ def createDataset(datasetPath, extendPedal = True):
 
     for path in Path(datasetPath).rglob('*/*.midi'):
         t1 = time.time()
-        # also find the correspoding audio file
+        # find the correspoding audio file
 
         
         midiFile = pretty_midi.PrettyMIDI(str(path))
@@ -235,7 +242,7 @@ def createDataset(datasetPath, extendPedal = True):
         events = parseEventAll(inst.notes, inst.control_changes, extendPedal)
 
         t2 = time.time()
-        # also read meta info from the wav file
+        # read meta info from the wav file
 
         relPath = path.relative_to(datasetPath)
 
